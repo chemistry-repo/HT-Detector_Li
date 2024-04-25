@@ -20,5 +20,5 @@ if __name__ == '__main__':
     # # 使用模型
     # model.train(data="coco128.yaml", epochs=3)  # 训练模型
     # metrics = model.val()  # 在验证集上评估模型性能
-    results = model.predict(source="custom/recognize/Date0420_S01ml_Num08_Deg000_Dist020cm.jpg", save=True)  # 对图像进行预测
+    results = model.predict(source="custom/detectImg/Date0420_S01ml_Num08_Deg000_Dist020cm.jpg", save=True)  # 对图像进行预测
     # success = model.export(format="onnx")  # 将模型导出为 ONNX 格式
