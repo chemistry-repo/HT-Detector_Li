@@ -28,44 +28,44 @@ if __name__ == '__main__':
 
 
     #
-    # model = YOLO("weights/mlsensing/yolov8n_640_best.pt")  # 加载预训练模型（建议用于训练）
-    # file_names = os.listdir(os.path.join(os.getcwd(), "custom/detectImg/"))
-    # abs_file_names = []
-    # for file_name in file_names:
-    #     abs_file_names.append(os.path.join(os.getcwd(), "custom/detectImg/", file_name))
-    # for abs_file_name in abs_file_names:
-    #     results = model.predict(source=abs_file_name, save=True)  # 对图像进行预测
-    #     # print('type(results)========')
-    #     # print(type(results))
-    #     # print('results-------')
-    #     # print(results)
-    #     # print('++++++++++++++++++++++++++++++++++++++++')
-    #     # print(abs_file_name)
-
     model = YOLO("weights/mlsensing/yolov8n_640_best.pt")  # 加载预训练模型（建议用于训练）
-    results = model.predict(source="custom/detectImg/Date0420_S01ml_Num03_Deg000_Dist020cm.jpg", save=True)  # 对图像进行预测
+    file_names = os.listdir(os.path.join(os.getcwd(), "custom/detectImg/"))
+    abs_file_names = []
+    for file_name in file_names:
+        abs_file_names.append(os.path.join(os.getcwd(), "custom/detectImg/", file_name))
+    for abs_file_name in abs_file_names:
+        results = model.predict(source=abs_file_name, save=True)  # 对图像进行预测
+        # print('type(results)========')
+        # print(type(results))
+        # print('results-------')
+        # print(results)
+        # print('++++++++++++++++++++++++++++++++++++++++')
+        # print(abs_file_name)
 
+    # model = YOLO("weights/mlsensing/yolov8n_640_best.pt")  # 加载预训练模型（建议用于训练）
+    # results = model.predict(source="custom/detectImg/Date0420_S01ml_Num03_Deg000_Dist020cm.jpg", save=True)  # 对图像进行预测
+    #
+    # # for result in results:
+    # # print("++++++++++++++++++++++++++++++++++++++++++")
+    # # print('type(result)', type(results))
+    # # print(results.boxes.xywh)
+    # # print("__________________________________________")
+    #
+    #
     # for result in results:
-    # print("++++++++++++++++++++++++++++++++++++++++++")
-    # print('type(result)', type(results))
-    # print(results.boxes.xywh)
-    # print("__________________________________________")
-
-
-    for result in results:
-        print("++++++++++++++++++++++++++++++++++++++++++")
-        print('len(results)', len(results))
-        print('type(result)', type(result))
-        print(result.boxes.xywh)
-        print("__________________________________________")
-
-
-
-    # for item in results:
-    #     print('len(item)=', len(item))
-    #     print('type(item)=', type(item))
-    #     for iii in item:
-    #         print('len(iii)',len(iii))
-    #         print('type(iii)=','\n', type(iii))
-    #         print(iii, '\n','________________________________')
-    #     # print('item---------------------',"\n", item)
+    #     print("++++++++++++++++++++++++++++++++++++++++++")
+    #     print('len(results)', len(results))
+    #     print('type(result)', type(result))
+    #     print(result.boxes.xyxy)
+    #     print("__________________________________________")
+    #
+    #
+    #
+    # # for item in results:
+    # #     print('len(item)=', len(item))
+    # #     print('type(item)=', type(item))
+    # #     for iii in item:
+    # #         print('len(iii)',len(iii))
+    # #         print('type(iii)=','\n', type(iii))
+    # #         print(iii, '\n','________________________________')
+    # #     # print('item---------------------',"\n", item)

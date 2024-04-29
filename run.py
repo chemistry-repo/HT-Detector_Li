@@ -10,6 +10,48 @@ if __name__ == '__main__':
     results = model.train(data='C:/yue/eclipse/MLchem/ImgRec/YOLOv8/custom/mlsensing.v3-mlsensing_640.yolov8/data.yaml', epochs=300, device=0)
     metrics = model.val()  # 在验证集上评估模型性能
 
+    # # Load a model
+    # model = YOLO('yolov8s.yaml')  # build a new model from YAML
+    # model = YOLO('weights/yolo/yolov8s.pt')  # load a pretrained model (recommended for training)
+    # model = YOLO('yolov8s.yaml').load('weights/yolo/yolov8s.pt')  # build from YAML and transfer weights
+    #
+    # # Train the model
+    # results = model.train(data='C:/yue/eclipse/MLchem/ImgRec/YOLOv8/custom/mlsensing.v3-mlsensing_640.yolov8/data.yaml',
+    #                       epochs=300, device=0)
+    # metrics = model.val()  # 在验证集上评估模型性能
+
+
+    # # Load a model
+    # model = YOLO('yolov8m.yaml')  # build a new model from YAML
+    # model = YOLO('weights/yolo/yolov8m.pt')  # load a pretrained model (recommended for training)
+    # model = YOLO('yolov8m.yaml').load('weights/yolo/yolov8m.pt')  # build from YAML and transfer weights
+    #
+    # # Train the model
+    # results = model.train(data='C:/yue/eclipse/MLchem/ImgRec/YOLOv8/custom/mlsensing.v3-mlsensing_640.yolov8/data.yaml',
+    #                       epochs=300, device=0)
+    # metrics = model.val()  # 在验证集上评估模型性能
+
+
+    # # Load a model
+    # model = YOLO('yolov8l.yaml')  # build a new model from YAML
+    # model = YOLO('weights/yolo/yolov8l.pt')  # load a pretrained model (recommended for training)
+    # model = YOLO('yolov8l.yaml').load('weights/yolo/yolov8l.pt')  # build from YAML and transfer weights
+    #
+    # # Train the model
+    # results = model.train(data='C:/yue/eclipse/MLchem/ImgRec/YOLOv8/custom/mlsensing.v3-mlsensing_640.yolov8/data.yaml',
+    #                       epochs=300, device=0)
+    # metrics = model.val()  # 在验证集上评估模型性能
+
+    # # Load a model
+    # model = YOLO('yolov8x.yaml')  # build a new model from YAML
+    # model = YOLO('weights/yolo/yolov8x.pt')  # load a pretrained model (recommended for training)
+    # model = YOLO('yolov8x.yaml').load('weights/yolo/yolov8x.pt')  # build from YAML and transfer weights
+    #
+    # # Train the model
+    # results = model.train(data='C:/yue/eclipse/MLchem/ImgRec/YOLOv8/custom/mlsensing.v3-mlsensing_640.yolov8/data.yaml',
+    #                       epochs=300, device=0)
+    # metrics = model.val()  # 在验证集上评估模型性能
+
 
 
 
