@@ -821,6 +821,21 @@ class Model(nn.Module):
     def _smart_load(self, key: str):
         """Load model/trainer/validator/predictor."""
         try:
+            print('---------------------------------')
+            print('self.task=', self.task)
+            print('key=', key)
+            print('self.task_map:')
+            # print('type(self.task_map.keys())', type(self.task_map.keys()))
+            # print(self.task_map.keys())
+            # print('type({})', type({}))
+            # print(list(self.task_map.keys()))
+
+            for item in list(self.task_map.keys()):
+                print(self.task_map[item])
+                # print(item)
+
+            # print('self.task_map=', self.task_map)
+            print('---------------------------------')
             return self.task_map[self.task][key]
         except Exception as e:
             name = self.__class__.__name__
