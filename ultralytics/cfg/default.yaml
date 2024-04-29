@@ -73,7 +73,7 @@ save_crop: False # (bool) save cropped images with results
 show_labels: True # (bool) show prediction labels, i.e. 'person'
 show_conf: False # (bool) show prediction confidence, i.e. '0.99'
 show_boxes: True # (bool) show prediction boxes
-line_width: 8 # (int, optional) line width of the bounding boxes. Scaled to image size if None.
+line_width: 9 # (int, optional) line width of the bounding boxes. Scaled to image size if None.
 
 # Export settings ------------------------------------------------------------------------------------------------------
 format: torchscript # (str) format to export to, choices at https://docs.ultralytics.com/modes/export/#export-formats
