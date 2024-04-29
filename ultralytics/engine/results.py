@@ -274,13 +274,52 @@ class Results(SimpleClass):
         # Plot Detect results
         if pred_boxes is not None and show_boxes:
             print('my detect++++++------------------------------------')
-            print('pred_boxes=', pred_boxes)
+            print('show_boxes=', show_boxes)
+            # print('pred_boxes cls=', pred_boxes.cls)
+            # print('pred_boxes xyxy=', pred_boxes.xyxy)
+            # print('pred_boxes xywh=', pred_boxes.xywh)
+            # print('pred_boxes type=', type(pred_boxes))
+
+            # print('items =', pred_boxes.cls[0].item())
+
+            index = 0
+            for item in pred_boxes.cls:
+                if item.item() == 0:
+                    y_bias = 150
+                    txt_bias = 100
+                    x0, y0, x1, y1 = pred_boxes.xyxy[index][0].item(), pred_boxes.xyxy[index][1].item(), pred_boxes.xyxy[index][2].item(), pred_boxes.xyxy[index][3].item()
+                    _, _,  w,  h = pred_boxes.xywh[index][0].item(), pred_boxes.xywh[index][1].item(), pred_boxes.xywh[index][2].item(), pred_boxes.xywh[index][3].item()
+
+                    from PIL import ImageDraw
+                    # self.im = im if input_is_pil else Image.fromarray(im)
+                    print('img =', img)
+                    # self.draw = ImageDraw.Draw(img)
+                    # self.draw.text((p1[0], p1[1] - h if outside else p1[1]), label, fill=txt_color, font=self.font)
+
+                    # box1 = Boxes(boxes=None, self.orig_shape) #if boxes is not None else None
+                    # box1 = Boxes(None, self.orig_shape) #if boxes is not None else None
+                    # annotator.box_label(box=box1, label='YUe Hengmao')
+                    annotator.text([int(x0), int(y1) + y_bias], "|Con:", txt_color=(255, 255, 255))
+                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "| 100", txt_color=(255, 255, 255))
+                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 2], "|Blue:", txt_color=(255, 0, 0))
+                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 3], "| 100", txt_color=(255, 0, 0))
+                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 4], "|Grn:", txt_color=(0, 255, 0))
+                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 5], "| 100", txt_color=(0, 255, 0))
+                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 6], "|Red:", txt_color=(0, 0, 255))
+                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 7], "| 100", txt_color=(0, 0, 255))
+
+
+
+                index = index + 1
+
             for d in reversed(pred_boxes):
                 c, conf, id = int(d.cls), float(d.conf) if conf else None, None if d.id is None else int(d.id.item())
                 name = ("" if id is None else f"id:{id} ") + names[c]
                 label = (f"{name} {conf:.2f}" if conf else name) if labels else None
+                # label = f"{name}" if name else None
                 box = d.xyxyxyxy.reshape(-1, 4, 2).squeeze() if is_obb else d.xyxy.squeeze()
                 annotator.box_label(box, label, color=colors(c, True), rotated=is_obb)
+                print('color=', colors(c, True))
 
 
         # Plot Classify results
