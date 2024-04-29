@@ -343,6 +343,42 @@ class Results(SimpleClass):
 
         return annotator.result()
 
+# ============================
+
+    def calAvgRgb(self, img, x, y, w, h):
+        if 0 == w or 0 == h:
+            return False
+        r_sum = 0
+        g_sum = 0
+        b_sum = 0
+        for width in range(w):
+            for height in range(h):
+                r, g, b = img[y + height, x + width]
+                #                print('h:',h,'s:',s,'v:',v)
+                r_sum = r_sum + r
+                g_sum = g_sum + g
+                b_sum = b_sum + b
+        #        print('a_sum =', a_sum)
+        #        print('b_sum =', b_sum)
+        #        print('c_sum =', c_sum)
+
+        self.accuracy = 2
+        #        print('self.accuracy', self.accuracy)
+        if self.accuracy == 0:
+            r_avg = round(r_sum / (w * h))
+            g_avg = round(g_sum / (w * h))
+            b_avg = round(b_sum / (w * h))
+        else:
+            r_avg = round(r_sum / (w * h), self.accuracy)
+            g_avg = round(g_sum / (w * h), self.accuracy)
+            b_avg = round(b_sum / (w * h), self.accuracy)
+        #        print('a_avg', a_avg, 'b_avg', b_avg, 'c_avg', c_avg)
+
+        return r_avg, g_avg, b_avg
+
+# ============================
+
+
     def show(self, *args, **kwargs):
         """Show annotated results image."""
         self.plot(show=True, *args, **kwargs)
