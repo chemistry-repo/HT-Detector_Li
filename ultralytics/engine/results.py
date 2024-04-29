@@ -290,9 +290,16 @@ class Results(SimpleClass):
                     x0, y0, x1, y1 = pred_boxes.xyxy[index][0].item(), pred_boxes.xyxy[index][1].item(), pred_boxes.xyxy[index][2].item(), pred_boxes.xyxy[index][3].item()
                     _, _,  w,  h = pred_boxes.xywh[index][0].item(), pred_boxes.xywh[index][1].item(), pred_boxes.xywh[index][2].item(), pred_boxes.xywh[index][3].item()
 
-                    from PIL import ImageDraw
+                    xmid, ymid = int((x0+x1)/2), int((y0+y1)/2)
+
+                    pixbias = 5
+
+                    x0_con, y0_con, w_con, h_con = xmid-pixbias, ymid-pixbias, pixbias*2+1, pixbias*2+1
+                    r_avg, g_avg, b_avg = self.calAvgRgb(annotator.im, x0_con, y0_con, w_con, h_con)
+
+                    # from PIL import ImageDraw
                     # self.im = im if input_is_pil else Image.fromarray(im)
-                    print('img =', img)
+                    # print('img =', img)
                     # self.draw = ImageDraw.Draw(img)
                     # self.draw.text((p1[0], p1[1] - h if outside else p1[1]), label, fill=txt_color, font=self.font)
 
@@ -302,13 +309,11 @@ class Results(SimpleClass):
                     annotator.text([int(x0), int(y1) + y_bias], "|Con:", txt_color=(255, 255, 255))
                     annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "| 100", txt_color=(255, 255, 255))
                     annotator.text([int(x0), int(y1) + y_bias + txt_bias * 2], "|Blue:", txt_color=(255, 0, 0))
-                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 3], "| 100", txt_color=(255, 0, 0))
-                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 4], "|Grn:", txt_color=(0, 255, 0))
-                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 5], "| 100", txt_color=(0, 255, 0))
+                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 3], "|" + str(b_avg), txt_color=(255, 0, 0))
+                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 4], "|Green:", txt_color=(0, 255, 0))
+                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 5], "|" + str(g_avg), txt_color=(0, 255, 0))
                     annotator.text([int(x0), int(y1) + y_bias + txt_bias * 6], "|Red:", txt_color=(0, 0, 255))
-                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 7], "| 100", txt_color=(0, 0, 255))
-
-
+                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 7], "|" + str(r_avg), txt_color=(0, 0, 255))
 
                 index = index + 1
 
@@ -362,7 +367,7 @@ class Results(SimpleClass):
         #        print('b_sum =', b_sum)
         #        print('c_sum =', c_sum)
 
-        self.accuracy = 2
+        self.accuracy = 1
         #        print('self.accuracy', self.accuracy)
         if self.accuracy == 0:
             r_avg = round(r_sum / (w * h))
