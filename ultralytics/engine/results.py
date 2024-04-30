@@ -292,11 +292,14 @@ class Results(SimpleClass):
 
                     xmid, ymid = int((x0+x1)/2), int((y0+y1)/2)
 
-                    pixbias = 5
+                    pixbias = 2
 
                     x0_con, y0_con, w_con, h_con = xmid-pixbias, ymid-pixbias, pixbias*2+1, pixbias*2+1
                     x1_con, y1_con = x0_con+w_con, y0_con+h_con
                     r_avg, g_avg, b_avg = self.calAvgRgb(annotator.im, x0_con, y0_con, w_con, h_con)
+
+                    c_con = (-b_avg+147.59)/0.7501
+                    c_con = round(c_con, 1)
 
                     # annotator.rectangle(xy=(x0_con, y0_con), width=5)
                     # annotator.box_label(box=Boxes(torch.Tensor([x0_con, y0_con, x1_con, y1_con,  0.9, 0]), orig_shape=annotator.im.shape))
@@ -311,7 +314,7 @@ class Results(SimpleClass):
                     # box1 = Boxes(None, self.orig_shape) #if boxes is not None else None
                     # annotator.box_label(box=box1, label='YUe Hengmao')
                     annotator.text([int(x0), int(y1) + y_bias], "|Con:", txt_color=(255, 255, 255))
-                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "| 100", txt_color=(255, 255, 255))
+                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "|" + str(c_con), txt_color=(255, 255, 255))
                     annotator.text([int(x0), int(y1) + y_bias + txt_bias * 2], "|Blue:", txt_color=(255, 0, 0))
                     annotator.text([int(x0), int(y1) + y_bias + txt_bias * 3], "|" + str(b_avg), txt_color=(255, 0, 0))
                     annotator.text([int(x0), int(y1) + y_bias + txt_bias * 4], "|Green:", txt_color=(0, 255, 0))
@@ -362,7 +365,7 @@ class Results(SimpleClass):
         b_sum = 0
         for width in range(w):
             for height in range(h):
-                r, g, b = img[y + height, x + width]
+                b, g, r = img[y + height, x + width]
                 #                print('h:',h,'s:',s,'v:',v)
                 r_sum = r_sum + r
                 g_sum = g_sum + g
@@ -371,7 +374,7 @@ class Results(SimpleClass):
         #        print('b_sum =', b_sum)
         #        print('c_sum =', c_sum)
 
-        self.accuracy = 1
+        self.accuracy = 0
         #        print('self.accuracy', self.accuracy)
         if self.accuracy == 0:
             r_avg = round(r_sum / (w * h))
