@@ -295,7 +295,11 @@ class Results(SimpleClass):
                     pixbias = 5
 
                     x0_con, y0_con, w_con, h_con = xmid-pixbias, ymid-pixbias, pixbias*2+1, pixbias*2+1
+                    x1_con, y1_con = x0_con+w_con, y0_con+h_con
                     r_avg, g_avg, b_avg = self.calAvgRgb(annotator.im, x0_con, y0_con, w_con, h_con)
+
+                    # annotator.rectangle(xy=(x0_con, y0_con), width=5)
+                    # annotator.box_label(box=Boxes(torch.Tensor([x0_con, y0_con, x1_con, y1_con,  0.9, 0]), orig_shape=annotator.im.shape))
 
                     # from PIL import ImageDraw
                     # self.im = im if input_is_pil else Image.fromarray(im)
