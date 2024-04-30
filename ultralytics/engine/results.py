@@ -291,10 +291,12 @@ class Results(SimpleClass):
                     _, _,  w,  h = pred_boxes.xywh[index][0].item(), pred_boxes.xywh[index][1].item(), pred_boxes.xywh[index][2].item(), pred_boxes.xywh[index][3].item()
 
                     xmid, ymid = int((x0+x1)/2), int((y0+y1)/2)
+                    # xmid, ymid = int((x0 + xmid) / 2), int((y0 + ymid) / 2)
 
-                    pixbias = 2
+                    x_pixbias = 40
+                    y_pixbias = 80
 
-                    x0_con, y0_con, w_con, h_con = xmid-pixbias, ymid-pixbias, pixbias*2+1, pixbias*2+1
+                    x0_con, y0_con, w_con, h_con = xmid-x_pixbias, ymid-y_pixbias, x_pixbias*2+1, y_pixbias*2+1
                     x1_con, y1_con = x0_con+w_con, y0_con+h_con
                     r_avg, g_avg, b_avg = self.calAvgRgb(annotator.im, x0_con, y0_con, w_con, h_con)
 
@@ -375,6 +377,7 @@ class Results(SimpleClass):
         #        print('c_sum =', c_sum)
 
         self.accuracy = 0
+        print('w*h=', w*h)
         #        print('self.accuracy', self.accuracy)
         if self.accuracy == 0:
             r_avg = round(r_sum / (w * h))
