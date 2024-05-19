@@ -283,24 +283,43 @@ class Results(SimpleClass):
             # print('items =', pred_boxes.cls[0].item())
 
             index = 0
+            # print('pred_boxes.cls', pred_boxes.cls)
             for item in pred_boxes.cls:
-                if item.item() == 0:
+                if item.item() == 1:
+                    # print('item=', item.names)
                     y_bias = 150
                     txt_bias = 100
                     x0, y0, x1, y1 = pred_boxes.xyxy[index][0].item(), pred_boxes.xyxy[index][1].item(), pred_boxes.xyxy[index][2].item(), pred_boxes.xyxy[index][3].item()
                     _, _,  w,  h = pred_boxes.xywh[index][0].item(), pred_boxes.xywh[index][1].item(), pred_boxes.xywh[index][2].item(), pred_boxes.xywh[index][3].item()
 
-                    xmid, ymid = int((x0+x1)/2), int((y0+y1)/2)
-                    # xmid, ymid = int((x0 + xmid) / 2), int((y0 + ymid) / 2)
 
-                    x_pixbias = 40
-                    y_pixbias = 80
+                    if False: #center point and extend area
+                        x_ratio = 1/2
+                        y_ratio = 2/3
+                        xmid, ymid = int(x1*x_ratio+x0*(1-x_ratio)), int(y1*y_ratio+y0*(1-y_ratio))
 
-                    x0_con, y0_con, w_con, h_con = xmid-x_pixbias, ymid-y_pixbias, x_pixbias*2+1, y_pixbias*2+1
-                    x1_con, y1_con = x0_con+w_con, y0_con+h_con
+                        x_pixbias = 5
+                        y_pixbias = 5
+
+                        x0_con, y0_con, w_con, h_con = xmid-x_pixbias, ymid-y_pixbias, x_pixbias*2+1, y_pixbias*2+1
+                        x1_con, y1_con = x0_con+w_con, y0_con+h_con
+
+                    else: # start point and end point
+                        x0_ratio = 1/8
+                        y0_ratio = 1/2
+                        x1_ratio = 7/8
+                        y1_ratio = 7/8
+                        x0_con, y0_con, x1_con, y1_con = int(x1*x0_ratio+x0*(1-x0_ratio)), int(y1*y0_ratio+y0*(1-y0_ratio)), int(x1*x1_ratio+x0*(1-x1_ratio)), int(y1*y1_ratio+y0*(1-y1_ratio))
+                        w_con, h_con = (x1_con - x0_con), (y1_con - y0_con)
+
                     r_avg, g_avg, b_avg = self.calAvgRgb(annotator.im, x0_con, y0_con, w_con, h_con)
 
-                    c_con = (-b_avg+147.59)/0.7501
+                    # mark the concentration area
+                    mybox = torch.tensor([x0_con, y0_con, x1_con, y1_con], device='cuda:0')
+                    annotator.box_label(mybox, label="", color=(250,240,10))
+
+
+                    c_con = (-b_avg+154.53)/1.0529
                     c_con = round(c_con, 1)
 
                     # annotator.rectangle(xy=(x0_con, y0_con), width=5)
@@ -315,10 +334,11 @@ class Results(SimpleClass):
                     # box1 = Boxes(boxes=None, self.orig_shape) #if boxes is not None else None
                     # box1 = Boxes(None, self.orig_shape) #if boxes is not None else None
                     # annotator.box_label(box=box1, label='YUe Hengmao')
+
                     annotator.text([int(x0), int(y1) + y_bias], "|Con:", txt_color=(255, 255, 255))
                     annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "|" + str(c_con), txt_color=(255, 255, 255))
                     annotator.text([int(x0), int(y1) + y_bias + txt_bias * 2], "|Blue:", txt_color=(255, 0, 0))
-                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 3], "|" + str(b_avg), txt_color=(255, 0, 0))
+                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 3], "|" + str(b_avg), txt_color=(255, 255, 255))
                     annotator.text([int(x0), int(y1) + y_bias + txt_bias * 4], "|Green:", txt_color=(0, 255, 0))
                     annotator.text([int(x0), int(y1) + y_bias + txt_bias * 5], "|" + str(g_avg), txt_color=(0, 255, 0))
                     annotator.text([int(x0), int(y1) + y_bias + txt_bias * 6], "|Red:", txt_color=(0, 0, 255))
@@ -332,6 +352,7 @@ class Results(SimpleClass):
                 label = (f"{name} {conf:.2f}" if conf else name) if labels else None
                 # label = f"{name}" if name else None
                 box = d.xyxyxyxy.reshape(-1, 4, 2).squeeze() if is_obb else d.xyxy.squeeze()
+                # print('box=', box)
                 annotator.box_label(box, label, color=colors(c, True), rotated=is_obb)
                 print('color=', colors(c, True))
 
