@@ -14,3 +14,5 @@ tensor = torch.ones((2,), dtype=torch.int8)
 print(tensor)
 mybox = torch.tensor(data=[1, 2, 3, 4], device='cuda:0')
 print(mybox)
+
+#--
