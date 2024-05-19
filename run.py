@@ -7,7 +7,7 @@ if __name__ == '__main__':
     model = YOLO('yolov8n.yaml').load('weights/yolo/yolov8n.pt')  # build from YAML and transfer weights
 
     # Train the model
-    results = model.train(data='C:/yue/eclipse/MLchem/ImgRec/YOLOv8/custom/mlsensing.v3-mlsensing_640.yolov8/data.yaml', epochs=300, device=0)
+    results = model.train(data='C:/yue/eclipse/MLchem/ImgRec/YOLOv8/custom/cuvette_HuiLi.v1i.yolov8/data.yaml', epochs=300, device=0)
     metrics = model.val()  # 在验证集上评估模型性能
 
     # # Load a model
