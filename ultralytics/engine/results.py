@@ -275,6 +275,9 @@ class Results(SimpleClass):
         if pred_boxes is not None and show_boxes:
             print('my detect++++++------------------------------------')
             print('show_boxes=', show_boxes)
+            from main import x0_ratio, y0_ratio, x1_ratio, y1_ratio, con_detect, con_list, b_avg_list
+            from scipy import stats
+            import os, json
             # print('pred_boxes cls=', pred_boxes.cls)
             # print('pred_boxes xyxy=', pred_boxes.xyxy)
             # print('pred_boxes xywh=', pred_boxes.xywh)
@@ -284,6 +287,13 @@ class Results(SimpleClass):
 
             index = 0
             # print('pred_boxes.cls', pred_boxes.cls)
+            b_avg_list.clear()
+            formula_path = os.path.join(os.path.dirname(os.path.dirname(self.path)), 'formula')
+            if not os.path.exists(formula_path):
+                os.makedirs(formula_path)
+            # print('fromula_path:', formula_path)
+            formula_file = os.path.join(formula_path, 'formula.txt')
+            print('formula file name: ', formula_file)
             for item in pred_boxes.cls:
                 if item.item() == 1:
                     # print('item=', item.names)
@@ -291,7 +301,6 @@ class Results(SimpleClass):
                     txt_bias = 100
                     x0, y0, x1, y1 = pred_boxes.xyxy[index][0].item(), pred_boxes.xyxy[index][1].item(), pred_boxes.xyxy[index][2].item(), pred_boxes.xyxy[index][3].item()
                     _, _,  w,  h = pred_boxes.xywh[index][0].item(), pred_boxes.xywh[index][1].item(), pred_boxes.xywh[index][2].item(), pred_boxes.xywh[index][3].item()
-
 
                     if False: #center point and extend area
                         x_ratio = 1/2
@@ -305,10 +314,10 @@ class Results(SimpleClass):
                         x1_con, y1_con = x0_con+w_con, y0_con+h_con
 
                     else: # start point and end point
-                        x0_ratio = 1/8
-                        y0_ratio = 1/2
-                        x1_ratio = 7/8
-                        y1_ratio = 7/8
+                        # x0_ratio = 1/8
+                        # y0_ratio = 1/2
+                        # x1_ratio = 7/8
+                        # y1_ratio = 7/8
                         x0_con, y0_con, x1_con, y1_con = int(x1*x0_ratio+x0*(1-x0_ratio)), int(y1*y0_ratio+y0*(1-y0_ratio)), int(x1*x1_ratio+x0*(1-x1_ratio)), int(y1*y1_ratio+y0*(1-y1_ratio))
                         w_con, h_con = (x1_con - x0_con), (y1_con - y0_con)
 
@@ -318,25 +327,38 @@ class Results(SimpleClass):
                     mybox = torch.tensor([x0_con, y0_con, x1_con, y1_con], device='cuda:0')
                     annotator.box_label(mybox, label="", color=(250,240,10))
 
+                    if not con_detect:
+                        b_avg_list.append(b_avg)
 
-                    c_con = (-b_avg+154.53)/1.0529
-                    c_con = round(c_con, 1)
+                    if con_detect:
+                        if os.path.exists(formula_file):
+                            with open(formula_file, 'r') as file:
+                                data_dic = json.load(file)
+                                # print('data_dic:', data_dic)
+                                # print('type(data_dic):', type(data_dic))
+                                # print(data_dic['intercept'])
+                                # print(data_dic['slope'])
+                            c_con = (-b_avg + data_dic['intercept']) / data_dic['slope']
+                            # c_con = (-b_avg+154.53)/1.0529
+                            c_con = round(c_con, 1)
 
-                    # annotator.rectangle(xy=(x0_con, y0_con), width=5)
-                    # annotator.box_label(box=Boxes(torch.Tensor([x0_con, y0_con, x1_con, y1_con,  0.9, 0]), orig_shape=annotator.im.shape))
+                            # annotator.rectangle(xy=(x0_con, y0_con), width=5)
+                            # annotator.box_label(box=Boxes(torch.Tensor([x0_con, y0_con, x1_con, y1_con,  0.9, 0]), orig_shape=annotator.im.shape))
 
-                    # from PIL import ImageDraw
-                    # self.im = im if input_is_pil else Image.fromarray(im)
-                    # print('img =', img)
-                    # self.draw = ImageDraw.Draw(img)
-                    # self.draw.text((p1[0], p1[1] - h if outside else p1[1]), label, fill=txt_color, font=self.font)
+                            # from PIL import ImageDraw
+                            # self.im = im if input_is_pil else Image.fromarray(im)
+                            # print('img =', img)
+                            # self.draw = ImageDraw.Draw(img)
+                            # self.draw.text((p1[0], p1[1] - h if outside else p1[1]), label, fill=txt_color, font=self.font)
 
-                    # box1 = Boxes(boxes=None, self.orig_shape) #if boxes is not None else None
-                    # box1 = Boxes(None, self.orig_shape) #if boxes is not None else None
-                    # annotator.box_label(box=box1, label='YUe Hengmao')
+                            # box1 = Boxes(boxes=None, self.orig_shape) #if boxes is not None else None
+                            # box1 = Boxes(None, self.orig_shape) #if boxes is not None else None
+                            # annotator.box_label(box=box1, label='YUe Hengmao')
 
-                    annotator.text([int(x0), int(y1) + y_bias], "|Con:", txt_color=(255, 255, 255))
-                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "|" + str(c_con), txt_color=(255, 255, 255))
+                            annotator.text([int(x0), int(y1) + y_bias], "|Con:", txt_color=(255, 255, 255))
+                            annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "|" + str(c_con), txt_color=(255, 255, 255))
+
+
                     annotator.text([int(x0), int(y1) + y_bias + txt_bias * 2], "|Blue:", txt_color=(255, 0, 0))
                     annotator.text([int(x0), int(y1) + y_bias + txt_bias * 3], "|" + str(b_avg), txt_color=(255, 255, 255))
                     annotator.text([int(x0), int(y1) + y_bias + txt_bias * 4], "|Green:", txt_color=(0, 255, 0))
@@ -345,6 +367,14 @@ class Results(SimpleClass):
                     annotator.text([int(x0), int(y1) + y_bias + txt_bias * 7], "|" + str(r_avg), txt_color=(0, 0, 255))
 
                 index = index + 1
+            # print('THe pathe is ', os.path.dirname(self.path))
+            # check if the number of concentration equal to blue value
+            if len(con_list) == len(b_avg_list):
+                slope, intercept, r, p, std_err = stats.linregress(con_list, b_avg_list)
+                with open(formula_file, 'w') as file:
+                    json.dump({'slope':slope, 'intercept':intercept}, file)
+                # os.path.dirname(self.path)
+
 
             for d in reversed(pred_boxes):
                 c, conf, id = int(d.cls), float(d.conf) if conf else None, None if d.id is None else int(d.id.item())
