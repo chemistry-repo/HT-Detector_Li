@@ -288,6 +288,7 @@ class Results(SimpleClass):
             index = 0
             # print('pred_boxes.cls', pred_boxes.cls)
             b_avg_list.clear()
+            
             formula_path = os.path.join(os.path.dirname(os.path.dirname(self.path)), 'formula')
             if not os.path.exists(formula_path):
                 os.makedirs(formula_path)
@@ -339,7 +340,7 @@ class Results(SimpleClass):
                                 # print('type(data_dic):', type(data_dic))
                                 # print(data_dic['intercept'])
                                 # print(data_dic['slope'])
-                            c_con = (-b_avg + data_dic['intercept']) / data_dic['slope']
+                            c_con = (b_avg - data_dic['intercept']) / data_dic['slope']
                             # c_con = (-b_avg+154.53)/1.0529
                             c_con = round(c_con, 1)
 
@@ -368,15 +369,15 @@ class Results(SimpleClass):
                     annotator.text([int(x0), int(y1) + y_bias + txt_bias * 7], "|" + str(r_avg), txt_color=(0, 0, 255))
 
                 index = index + 1
-            # print('THe pathe is ', os.path.dirname(self.path))
-            # check if the number of concentration equal to blue value
-            if len(con_list) == len(b_avg_list):
-                slope, intercept, r, p, std_err = stats.linregress(con_list, b_avg_list)
-                with open(formula_file, 'w') as file:
-                    json.dump({'slope':slope, 'intercept':intercept}, file)
-                with open(blue_file, 'w') as file:
-                    json.dump(b_avg_list, file)
-                # os.path.dirname(self.path)
+            if not con_detect:
+                # check if the number of concentration equal to blue value
+                if len(con_list) == len(b_avg_list):
+                    slope, intercept, r, p, std_err = stats.linregress(con_list, b_avg_list)
+                    with open(formula_file, 'w') as file:
+                        json.dump({'slope':slope, 'intercept':intercept, 'R2':r}, file)
+                    with open(blue_file, 'w') as file:
+                        json.dump(b_avg_list, file)
+                    # os.path.dirname(self.path)
 
 
             for d in reversed(pred_boxes):
