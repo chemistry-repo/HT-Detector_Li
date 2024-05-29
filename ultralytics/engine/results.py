@@ -293,6 +293,7 @@ class Results(SimpleClass):
                 os.makedirs(formula_path)
             # print('fromula_path:', formula_path)
             formula_file = os.path.join(formula_path, 'formula.txt')
+            blue_file = os.path.join(formula_path, 'blue.txt')
             print('formula file name: ', formula_file)
             for item in pred_boxes.cls:
                 if item.item() == 1:
@@ -373,6 +374,8 @@ class Results(SimpleClass):
                 slope, intercept, r, p, std_err = stats.linregress(con_list, b_avg_list)
                 with open(formula_file, 'w') as file:
                     json.dump({'slope':slope, 'intercept':intercept}, file)
+                with open(blue_file, 'w') as file:
+                    json.dump(b_avg_list, file)
                 # os.path.dirname(self.path)
 
 
