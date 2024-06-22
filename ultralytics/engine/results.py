@@ -296,14 +296,18 @@ class Results(SimpleClass):
             formula_file = os.path.join(formula_path, 'formula.txt')
             blue_file = os.path.join(formula_path, 'blue.txt')
             print('formula file name: ', formula_file)
+            coor_list = []
             for item in pred_boxes.cls:
+                # print("type of item :", type(pred_boxes))
+                # sort the coordinate of the expected class
+
                 if item.item() == 1:
                     # print('item=', item.names)
-                    y_bias = 150
-                    txt_bias = 100
                     x0, y0, x1, y1 = pred_boxes.xyxy[index][0].item(), pred_boxes.xyxy[index][1].item(), pred_boxes.xyxy[index][2].item(), pred_boxes.xyxy[index][3].item()
                     _, _,  w,  h = pred_boxes.xywh[index][0].item(), pred_boxes.xywh[index][1].item(), pred_boxes.xywh[index][2].item(), pred_boxes.xywh[index][3].item()
 
+                    y_bias = 150
+                    txt_bias = 80
                     if False: #center point and extend area
                         x_ratio = 1/2
                         y_ratio = 2/3
@@ -357,18 +361,34 @@ class Results(SimpleClass):
                             # box1 = Boxes(None, self.orig_shape) #if boxes is not None else None
                             # annotator.box_label(box=box1, label='YUe Hengmao')
 
-                            annotator.text([int(x0), int(y1) + y_bias], "|Con:", txt_color=(255, 255, 255))
-                            annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "|" + str(c_con), txt_color=(255, 255, 255))
+                            # two lines
+                            # annotator.text([int(x0), int(y1) + y_bias], "|Con:", txt_color=(255, 255, 255))
+                            # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "|" + str(c_con), txt_color=(255, 255, 255))
+                            # one line
+                            annotator.text([int(x0), int(y1) + y_bias], "Con:" + str(c_con), txt_color=(255, 255, 255))
 
+                    # # two lines
+                    # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 2], "|Blue:", txt_color=(255, 0, 0))
+                    # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 3], "|" + str(b_avg), txt_color=(255, 0, 0))
+                    # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 4], "|Green:", txt_color=(0, 255, 0))
+                    # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 5], "|" + str(g_avg), txt_color=(0, 255, 0))
+                    # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 6], "|Red:", txt_color=(0, 0, 255))
+                    # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 7], "|" + str(r_avg), txt_color=(0, 0, 255))
+                    # one line
+                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "Blue:" + str(b_avg), txt_color=(255, 0, 0))
+                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 2], "Green:" + str(g_avg), txt_color=(0, 255, 0))
+                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 3], "Red:" + str(r_avg), txt_color=(0, 0, 255))
 
-                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 2], "|Blue:", txt_color=(255, 0, 0))
-                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 3], "|" + str(b_avg), txt_color=(255, 255, 255))
-                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 4], "|Green:", txt_color=(0, 255, 0))
-                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 5], "|" + str(g_avg), txt_color=(0, 255, 0))
-                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 6], "|Red:", txt_color=(0, 0, 255))
-                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 7], "|" + str(r_avg), txt_color=(0, 0, 255))
+                    coor_list.append((x0,y0))
+                    annotator.text([int(x0), int(y1) - y_bias * 4 - txt_bias * 2], "ID:" + str(index),
+                                   txt_color=(255, 255, 255))
 
                 index = index + 1
+            # coor_list.sort()
+            # id = 1
+            # for item in coor_list:
+            #     annotator.text([int(item[0]), int(item[1]) - 630], "ID=" + str(id), txt_color=(255, 255, 255))
+            #     id = id + 1
             if not con_detect:
                 # check if the number of concentration equal to blue value
                 if len(con_list) == len(b_avg_list):
