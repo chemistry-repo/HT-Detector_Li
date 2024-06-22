@@ -15,7 +15,7 @@ def detection():
 
 
 
-
+'''
 
 if __name__ == '__main__':
     # # Load a model
@@ -85,3 +85,5 @@ if __name__ == '__main__':
     # #         print('type(iii)=','\n', type(iii))
     # #         print(iii, '\n','________________________________')
     # #     # print('item---------------------',"\n", item)
+
+'''
