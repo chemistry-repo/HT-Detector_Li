@@ -297,98 +297,155 @@ class Results(SimpleClass):
             blue_file = os.path.join(formula_path, 'blue.txt')
             print('formula file name: ', formula_file)
             coor_list = []
-            for item in pred_boxes.cls:
-                # print("type of item :", type(pred_boxes))
-                # sort the coordinate of the expected class
 
+            # sort the coordinates of the expected class
+            for item in pred_boxes.cls:
+                # print("type of item :", type(pred_boxes)
                 if item.item() == 1:
                     # print('item=', item.names)
                     x0, y0, x1, y1 = pred_boxes.xyxy[index][0].item(), pred_boxes.xyxy[index][1].item(), pred_boxes.xyxy[index][2].item(), pred_boxes.xyxy[index][3].item()
-                    _, _,  w,  h = pred_boxes.xywh[index][0].item(), pred_boxes.xywh[index][1].item(), pred_boxes.xywh[index][2].item(), pred_boxes.xywh[index][3].item()
-
-                    y_bias = 150
-                    txt_bias = 80
-                    if False: #center point and extend area
-                        x_ratio = 1/2
-                        y_ratio = 2/3
-                        xmid, ymid = int(x1*x_ratio+x0*(1-x_ratio)), int(y1*y_ratio+y0*(1-y_ratio))
-
-                        x_pixbias = 5
-                        y_pixbias = 5
-
-                        x0_con, y0_con, w_con, h_con = xmid-x_pixbias, ymid-y_pixbias, x_pixbias*2+1, y_pixbias*2+1
-                        x1_con, y1_con = x0_con+w_con, y0_con+h_con
-
-                    else: # start point and end point
-                        # x0_ratio = 1/8
-                        # y0_ratio = 1/2
-                        # x1_ratio = 7/8
-                        # y1_ratio = 7/8
-                        x0_con, y0_con, x1_con, y1_con = int(x1*x0_ratio+x0*(1-x0_ratio)), int(y1*y0_ratio+y0*(1-y0_ratio)), int(x1*x1_ratio+x0*(1-x1_ratio)), int(y1*y1_ratio+y0*(1-y1_ratio))
-                        w_con, h_con = (x1_con - x0_con), (y1_con - y0_con)
-
-                    r_avg, g_avg, b_avg = self.calAvgRgb(annotator.im, x0_con, y0_con, w_con, h_con)
-
-                    # mark the concentration area
-                    mybox = torch.tensor([x0_con, y0_con, x1_con, y1_con], device='cuda:0')
-                    annotator.box_label(mybox, label="", color=(250,240,10))
-
-                    if not con_detect:
-                        b_avg_list.append(b_avg)
-
-                    if con_detect:
-                        if os.path.exists(formula_file):
-                            with open(formula_file, 'r') as file:
-                                data_dic = json.load(file)
-                                # print('data_dic:', data_dic)
-                                # print('type(data_dic):', type(data_dic))
-                                # print(data_dic['intercept'])
-                                # print(data_dic['slope'])
-                            c_con = (b_avg - data_dic['intercept']) / data_dic['slope']
-                            # c_con = (-b_avg+154.53)/1.0529
-                            c_con = round(c_con, 1)
-
-                            # annotator.rectangle(xy=(x0_con, y0_con), width=5)
-                            # annotator.box_label(box=Boxes(torch.Tensor([x0_con, y0_con, x1_con, y1_con,  0.9, 0]), orig_shape=annotator.im.shape))
-
-                            # from PIL import ImageDraw
-                            # self.im = im if input_is_pil else Image.fromarray(im)
-                            # print('img =', img)
-                            # self.draw = ImageDraw.Draw(img)
-                            # self.draw.text((p1[0], p1[1] - h if outside else p1[1]), label, fill=txt_color, font=self.font)
-
-                            # box1 = Boxes(boxes=None, self.orig_shape) #if boxes is not None else None
-                            # box1 = Boxes(None, self.orig_shape) #if boxes is not None else None
-                            # annotator.box_label(box=box1, label='YUe Hengmao')
-
-                            # two lines
-                            # annotator.text([int(x0), int(y1) + y_bias], "|Con:", txt_color=(255, 255, 255))
-                            # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "|" + str(c_con), txt_color=(255, 255, 255))
-                            # one line
-                            annotator.text([int(x0), int(y1) + y_bias], "Con:" + str(c_con), txt_color=(255, 255, 255))
-
-                    # # two lines
-                    # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 2], "|Blue:", txt_color=(255, 0, 0))
-                    # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 3], "|" + str(b_avg), txt_color=(255, 0, 0))
-                    # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 4], "|Green:", txt_color=(0, 255, 0))
-                    # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 5], "|" + str(g_avg), txt_color=(0, 255, 0))
-                    # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 6], "|Red:", txt_color=(0, 0, 255))
-                    # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 7], "|" + str(r_avg), txt_color=(0, 0, 255))
-                    # one line
-                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "Blue:" + str(b_avg), txt_color=(255, 0, 0))
-                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 2], "Green:" + str(g_avg), txt_color=(0, 255, 0))
-                    annotator.text([int(x0), int(y1) + y_bias + txt_bias * 3], "Red:" + str(r_avg), txt_color=(0, 0, 255))
-
-                    coor_list.append((x0,y0))
-                    annotator.text([int(x0), int(y1) - y_bias * 4 - txt_bias * 2], "ID:" + str(index),
-                                   txt_color=(255, 255, 255))
-
+                    _, _,  w, h = pred_boxes.xywh[index][0].item(), pred_boxes.xywh[index][1].item(), pred_boxes.xywh[index][2].item(), pred_boxes.xywh[index][3].item()
+                    coor_list.append((x0, y0, x1, y1, w, h))
+                    # print('coor_list:', coor_list)
+                    # print('coor', coor)
+                    # print('seperate:', coor[0], coor[1], coor[2], coor[3], coor[4], coor[5])
                 index = index + 1
-            # coor_list.sort()
+            coor_list.sort() # sort the coordinates by x0
+
+            # calculate and annote the concentration and RGB
+            id = 1 # the number of the cuvette, form left to right
+            x0_last = 0
+            # x0_last_bias = 100
+            # y_center = 1512
+            # h_line = 80
+            # num_lines = len(coor_list) + 1
+            # x0_overall = x0_last + x0_last_bias
+            # y0_overall = y_center - (num_lines + h_line)/2
+            overall_list = [('No.', 'Con.', 'Blue', 'Green', 'Red')] # the overall list of the ids, concentrations, and RGBs
+            for coor in coor_list:
+                # print('coor', coor)
+                # print('seperate:', coor[0], coor[1], coor[2], coor[3], coor[4], coor[5])
+                x0, y0, x1, y1, w, h = coor[0], coor[1], coor[2], coor[3], coor[4], coor[5]
+                # print('xywh', x0, y0, x1, y1, w, h)
+            #
+            # # for item in pred_boxes.cls:
+            # #     # print("type of item :", type(pred_boxes))
+            # #     # sort the coordinate of the expected class
+            # #     if item.item() == 1:
+            # #         # print('item=', item.names)
+            # #         x0, y0, x1, y1 = pred_boxes.xyxy[index][0].item(), pred_boxes.xyxy[index][1].item(), pred_boxes.xyxy[index][2].item(), pred_boxes.xyxy[index][3].item()
+            # #         _, _,  w,  h = pred_boxes.xywh[index][0].item(), pred_boxes.xywh[index][1].item(), pred_boxes.xywh[index][2].item(), pred_boxes.xywh[index][3].item()
+            #
+                y_bias = 150
+                txt_bias = 80
+                if False: #center point and extend area
+                    x_ratio = 1/2
+                    y_ratio = 2/3
+                    xmid, ymid = int(x1*x_ratio+x0*(1-x_ratio)), int(y1*y_ratio+y0*(1-y_ratio))
+
+                    x_pixbias = 5
+                    y_pixbias = 5
+
+                    x0_con, y0_con, w_con, h_con = xmid-x_pixbias, ymid-y_pixbias, x_pixbias*2+1, y_pixbias*2+1
+                    x1_con, y1_con = x0_con+w_con, y0_con+h_con
+
+                else: # start point and end point
+                    # x0_ratio = 1/8
+                    # y0_ratio = 1/2
+                    # x1_ratio = 7/8
+                    # y1_ratio = 7/8
+                    x0_con, y0_con, x1_con, y1_con = int(x1*x0_ratio+x0*(1-x0_ratio)), int(y1*y0_ratio+y0*(1-y0_ratio)), int(x1*x1_ratio+x0*(1-x1_ratio)), int(y1*y1_ratio+y0*(1-y1_ratio))
+                    w_con, h_con = (x1_con - x0_con), (y1_con - y0_con)
+                    print('xywh_con', x0_con, y0_con, x1_con, y1_con, w_con, h_con)
+
+                r_avg, g_avg, b_avg = self.calAvgRgb(annotator.im, x0_con, y0_con, w_con, h_con)
+
+                # mark the concentration area
+                mybox = torch.tensor([x0_con, y0_con, x1_con, y1_con], device='cuda:0')
+                annotator.box_label(mybox, label="", color=(250,240,10))
+
+                if not con_detect:
+                    b_avg_list.append(b_avg)
+                    c_con = con_list[id-1]
+
+                if con_detect:
+                    if os.path.exists(formula_file):
+                        with open(formula_file, 'r') as file:
+                            data_dic = json.load(file)
+                            # print('data_dic:', data_dic)
+                            # print('type(data_dic):', type(data_dic))
+                            # print(data_dic['intercept'])
+                            # print(data_dic['slope'])
+                        c_con = (b_avg - data_dic['intercept']) / data_dic['slope']
+                        # c_con = (-b_avg+154.53)/1.0529
+                        c_con = round(c_con, 1)
+
+                        # annotator.rectangle(xy=(x0_con, y0_con), width=5)
+                        # annotator.box_label(box=Boxes(torch.Tensor([x0_con, y0_con, x1_con, y1_con,  0.9, 0]), orig_shape=annotator.im.shape))
+
+                        # from PIL import ImageDraw
+                        # self.im = im if input_is_pil else Image.fromarray(im)
+                        # print('img =', img)
+                        # self.draw = ImageDraw.Draw(img)
+                        # self.draw.text((p1[0], p1[1] - h if outside else p1[1]), label, fill=txt_color, font=self.font)
+
+                        # box1 = Boxes(boxes=None, self.orig_shape) #if boxes is not None else None
+                        # box1 = Boxes(None, self.orig_shape) #if boxes is not None else None
+                        # annotator.box_label(box=box1, label='YUe Hengmao')
+
+                        # two lines
+                        # annotator.text([int(x0), int(y1) + y_bias], "|Con:", txt_color=(255, 255, 255))
+                        # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "|" + str(c_con), txt_color=(255, 255, 255))
+                        # one line
+                        # annotator.text([int(x0), int(y1) + y_bias], "Con.:" + str(c_con), txt_color=(255, 255, 255))
+
+
+                # # two lines
+                # annotator.text([int(x0), int(y1) + y_bias], "Con.:" + str(c_con), txt_color=(255, 255, 255))
+                # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 2], "|Blue:", txt_color=(255, 0, 0))
+                # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 3], "|" + str(b_avg), txt_color=(255, 0, 0))
+                # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 4], "|Green:", txt_color=(0, 255, 0))
+                # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 5], "|" + str(g_avg), txt_color=(0, 255, 0))
+                # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 6], "|Red:", txt_color=(0, 0, 255))
+                # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 7], "|" + str(r_avg), txt_color=(0, 0, 255))
+                # one line
+                annotator.text([int(x0), int(y1) + y_bias], "Con.:" + str(c_con), txt_color=(255, 255, 255))
+                annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "Blue:" + str(b_avg), txt_color=(255, 0, 0))
+                annotator.text([int(x0), int(y1) + y_bias + txt_bias * 2], "Green:" + str(g_avg), txt_color=(0, 255, 0))
+                annotator.text([int(x0), int(y1) + y_bias + txt_bias * 3], "Red:" + str(r_avg), txt_color=(0, 0, 255))
+
+                annotator.text([int(x0), int(y1) - y_bias * 4 - txt_bias * 2], "No." + str(id), txt_color=(255, 255, 255))
+                # add c_con, b_avg, g_avg, r_avg to the overall list
+                overall_list.append((id, c_con, b_avg, g_avg, r_avg))
+                # the x0 of the last sample
+                x0_last = x0
+                print('x0_last =================== x0:', x0)
+                id = id + 1
+
+                # index = index + 1 # archieve
+            # coor_list.sort() # archieve
             # id = 1
             # for item in coor_list:
             #     annotator.text([int(item[0]), int(item[1]) - 630], "ID=" + str(id), txt_color=(255, 255, 255))
             #     id = id + 1
+
+            # x0_last = 0
+            x0_last_bias = 300
+            y_center = 1512 + 250
+            h_line = 100
+            num_lines = len(coor_list) + 1
+            x0_overall = x0_last + x0_last_bias
+            print('x_last:', x0_last, 'x_overall:', x0_overall)
+            y0_overall = y_center - (num_lines * h_line) / 2
+            overall_index = 0
+            annotator.text([int(x0_overall-50), int(y0_overall - h_line * 1.5)], 'TABLE. Concentration and RGB', txt_color=(255, 255, 255))
+            for overall_item in overall_list:
+                annotator.text([int(x0_overall), int(y0_overall + h_line * overall_index)], str(overall_item[0]), txt_color=(255, 255, 255))
+                annotator.text([int(x0_overall + 150), int(y0_overall + h_line * overall_index)], str(overall_item[1]), txt_color=(255, 255, 255))
+                annotator.text([int(x0_overall + 300), int(y0_overall + h_line * overall_index)], str(overall_item[2]), txt_color=(255, 0, 0))
+                annotator.text([int(x0_overall + 450), int(y0_overall + h_line * overall_index)], str(overall_item[3]), txt_color=(0, 255, 0))
+                annotator.text([int(x0_overall + 630), int(y0_overall + h_line * overall_index)], str(overall_item[4]), txt_color=(0, 0, 255))
+                overall_index = overall_index + 1
             if not con_detect:
                 # check if the number of concentration equal to blue value
                 if len(con_list) == len(b_avg_list):
