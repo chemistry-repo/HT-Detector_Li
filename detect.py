@@ -15,7 +15,7 @@ def detection():
 
 
 
-'''
+
 
 if __name__ == '__main__':
     # # Load a model
@@ -49,8 +49,12 @@ if __name__ == '__main__':
     abs_file_names = []
     for file_name in file_names:
         abs_file_names.append(os.path.join(os.getcwd(), "custom/detectImg/5.15/", file_name))
+    # print('name:', abs_file_names, 'length:', len(abs_file_names))
     for abs_file_name in abs_file_names:
+        print('abs_file_name:', abs_file_name)
+        print('THE FIRST  TIME')
         results = model.predict(source=abs_file_name, save=True)  # 对图像进行预测
+
         # print('type(results)========')
         # print(type(results))
         # print('results-------')
@@ -86,4 +90,3 @@ if __name__ == '__main__':
     # #         print(iii, '\n','________________________________')
     # #     # print('item---------------------',"\n", item)
 
-'''
