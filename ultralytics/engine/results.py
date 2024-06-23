@@ -275,7 +275,7 @@ class Results(SimpleClass):
         if pred_boxes is not None and show_boxes:
             print('my detect++++++------------------------------------')
             print('show_boxes=', show_boxes)
-            from main import x0_ratio, y0_ratio, x1_ratio, y1_ratio, con_detect, con_list, b_avg_list
+            from interface import x0_ratio, y0_ratio, x1_ratio, y1_ratio, con_detect, con_list, b_avg_list
             from scipy import stats
             import os, json
             # print('pred_boxes cls=', pred_boxes.cls)
@@ -288,14 +288,14 @@ class Results(SimpleClass):
             index = 0
             # print('pred_boxes.cls', pred_boxes.cls)
             b_avg_list.clear()
-            
+
             formula_path = os.path.join(os.path.dirname(os.path.dirname(self.path)), 'formula')
             if not os.path.exists(formula_path):
                 os.makedirs(formula_path)
             # print('fromula_path:', formula_path)
             formula_file = os.path.join(formula_path, 'formula.txt')
             blue_file = os.path.join(formula_path, 'blue.txt')
-            print('formula file name: ', formula_file)
+            # print('formula file name: ', formula_file)
             coor_list = []
 
             # sort the coordinates of the expected class
@@ -314,20 +314,15 @@ class Results(SimpleClass):
 
             # calculate and annote the concentration and RGB
             id = 1 # the number of the cuvette, form left to right
-            x0_last = 0
-            # x0_last_bias = 100
-            # y_center = 1512
-            # h_line = 80
-            # num_lines = len(coor_list) + 1
-            # x0_overall = x0_last + x0_last_bias
-            # y0_overall = y_center - (num_lines + h_line)/2
-            overall_list = [('No.', 'Con.', 'Blue', 'Green', 'Red')] # the overall list of the ids, concentrations, and RGBs
+            have_table = False
+            if have_table: x0_last = 0
+            if have_table: overall_list = [('No.', 'Con.', 'Blue', 'Green', 'Red')] # the overall list of the ids, concentrations, and RGBs
             for coor in coor_list:
                 # print('coor', coor)
                 # print('seperate:', coor[0], coor[1], coor[2], coor[3], coor[4], coor[5])
                 x0, y0, x1, y1, w, h = coor[0], coor[1], coor[2], coor[3], coor[4], coor[5]
                 # print('xywh', x0, y0, x1, y1, w, h)
-            #
+
             # # for item in pred_boxes.cls:
             # #     # print("type of item :", type(pred_boxes))
             # #     # sort the coordinate of the expected class
@@ -356,7 +351,7 @@ class Results(SimpleClass):
                     # y1_ratio = 7/8
                     x0_con, y0_con, x1_con, y1_con = int(x1*x0_ratio+x0*(1-x0_ratio)), int(y1*y0_ratio+y0*(1-y0_ratio)), int(x1*x1_ratio+x0*(1-x1_ratio)), int(y1*y1_ratio+y0*(1-y1_ratio))
                     w_con, h_con = (x1_con - x0_con), (y1_con - y0_con)
-                    print('xywh_con', x0_con, y0_con, x1_con, y1_con, w_con, h_con)
+                    # print('xywh_con', x0_con, y0_con, x1_con, y1_con, w_con, h_con)
 
                 r_avg, g_avg, b_avg = self.calAvgRgb(annotator.im, x0_con, y0_con, w_con, h_con)
 
@@ -410,16 +405,16 @@ class Results(SimpleClass):
                 # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 7], "|" + str(r_avg), txt_color=(0, 0, 255))
                 # one line
                 annotator.text([int(x0), int(y1) + y_bias], "Con.:" + str(c_con), txt_color=(255, 255, 255))
-                annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "Blue:" + str(b_avg), txt_color=(255, 0, 0))
+                annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "Blue:" + str(b_avg), txt_color=(255, 145, 48))
                 annotator.text([int(x0), int(y1) + y_bias + txt_bias * 2], "Green:" + str(g_avg), txt_color=(0, 255, 0))
                 annotator.text([int(x0), int(y1) + y_bias + txt_bias * 3], "Red:" + str(r_avg), txt_color=(0, 0, 255))
 
                 annotator.text([int(x0), int(y1) - y_bias * 4 - txt_bias * 2], "No." + str(id), txt_color=(255, 255, 255))
                 # add c_con, b_avg, g_avg, r_avg to the overall list
-                overall_list.append((id, c_con, b_avg, g_avg, r_avg))
+                if have_table: overall_list.append((id, c_con, b_avg, g_avg, r_avg))
                 # the x0 of the last sample
-                x0_last = x0
-                print('x0_last =================== x0:', x0)
+                if have_table: x0_last = x0
+                # print('x0_last =================== x0:', x0)
                 id = id + 1
 
                 # index = index + 1 # archieve
@@ -428,24 +423,25 @@ class Results(SimpleClass):
             # for item in coor_list:
             #     annotator.text([int(item[0]), int(item[1]) - 630], "ID=" + str(id), txt_color=(255, 255, 255))
             #     id = id + 1
+            if have_table:
+                # x0_last = 0
+                x0_last_bias = 300
+                y_center = 1512 + 250
+                h_line = 100
+                num_lines = len(coor_list) + 1
+                x0_overall = x0_last + x0_last_bias
+                # print('x_last:', x0_last, 'x_overall:', x0_overall)
+                y0_overall = y_center - (num_lines * h_line) / 2
+                overall_index = 0
+                annotator.text([int(x0_overall-50), int(y0_overall - h_line * 1.5)], 'TABLE. Concentration and RGB', txt_color=(255, 255, 255))
+                for overall_item in overall_list:
+                    annotator.text([int(x0_overall), int(y0_overall + h_line * overall_index)], str(overall_item[0]), txt_color=(255, 255, 255))
+                    annotator.text([int(x0_overall + 150), int(y0_overall + h_line * overall_index)], str(overall_item[1]), txt_color=(255, 255, 255))
+                    annotator.text([int(x0_overall + 300), int(y0_overall + h_line * overall_index)], str(overall_item[2]), txt_color=(255, 145, 48))
+                    annotator.text([int(x0_overall + 450), int(y0_overall + h_line * overall_index)], str(overall_item[3]), txt_color=(0, 255, 0))
+                    annotator.text([int(x0_overall + 630), int(y0_overall + h_line * overall_index)], str(overall_item[4]), txt_color=(0, 0, 255))
+                    overall_index = overall_index + 1
 
-            # x0_last = 0
-            x0_last_bias = 300
-            y_center = 1512 + 250
-            h_line = 100
-            num_lines = len(coor_list) + 1
-            x0_overall = x0_last + x0_last_bias
-            print('x_last:', x0_last, 'x_overall:', x0_overall)
-            y0_overall = y_center - (num_lines * h_line) / 2
-            overall_index = 0
-            annotator.text([int(x0_overall-50), int(y0_overall - h_line * 1.5)], 'TABLE. Concentration and RGB', txt_color=(255, 255, 255))
-            for overall_item in overall_list:
-                annotator.text([int(x0_overall), int(y0_overall + h_line * overall_index)], str(overall_item[0]), txt_color=(255, 255, 255))
-                annotator.text([int(x0_overall + 150), int(y0_overall + h_line * overall_index)], str(overall_item[1]), txt_color=(255, 255, 255))
-                annotator.text([int(x0_overall + 300), int(y0_overall + h_line * overall_index)], str(overall_item[2]), txt_color=(255, 0, 0))
-                annotator.text([int(x0_overall + 450), int(y0_overall + h_line * overall_index)], str(overall_item[3]), txt_color=(0, 255, 0))
-                annotator.text([int(x0_overall + 630), int(y0_overall + h_line * overall_index)], str(overall_item[4]), txt_color=(0, 0, 255))
-                overall_index = overall_index + 1
             if not con_detect:
                 # check if the number of concentration equal to blue value
                 if len(con_list) == len(b_avg_list):
@@ -465,7 +461,7 @@ class Results(SimpleClass):
                 box = d.xyxyxyxy.reshape(-1, 4, 2).squeeze() if is_obb else d.xyxy.squeeze()
                 # print('box=', box)
                 annotator.box_label(box, label, color=colors(c, True), rotated=is_obb)
-                print('color=', colors(c, True))
+                # print('color=', colors(c, True))
 
 
         # Plot Classify results
@@ -489,6 +485,7 @@ class Results(SimpleClass):
 
         return annotator.result()
 
+
 # ============================
 
     def calAvgRgb(self, img, x, y, w, h):
@@ -509,7 +506,7 @@ class Results(SimpleClass):
         #        print('c_sum =', c_sum)
 
         self.accuracy = 0
-        print('w*h=', w*h)
+        # print('w*h=', w*h)
         #        print('self.accuracy', self.accuracy)
         if self.accuracy == 0:
             r_avg = round(r_sum / (w * h))
