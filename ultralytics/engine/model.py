@@ -400,6 +400,7 @@ class Model(nn.Module):
         predictor=None,
         **kwargs,
     ) -> list:
+        # print("HLLLLLLLLLLLLLLLLLLLLLLLLLLMMLLLLLLLLLLLLLLLLLLLLL")
         """
         Performs predictions on the given image source using the YOLO model.
 
@@ -441,6 +442,7 @@ class Model(nn.Module):
         prompts = args.pop("prompts", None)  # for SAM-type models
 
         if not self.predictor:
+            # print("NOOOOOOOOOpredictor")
             self.predictor = predictor or self._smart_load("predictor")(overrides=args, _callbacks=self.callbacks)
             self.predictor.setup_model(model=self.model, verbose=is_cli)
         else:  # only update args if predictor is already setup
@@ -783,6 +785,32 @@ class Model(nn.Module):
         """
         self.callbacks[event].append(func)
 
+    def _smart_load(self, key: str):
+        """Load model/trainer/validator/predictor."""
+        try:
+            # print('---------------------------------')
+            # print('self.task=', self.task)
+            # print('key=', key)
+            # print('self.task_map:')
+            # print('type(self.task_map.keys())', type(self.task_map.keys()))
+            # print(self.task_map.keys())
+            # print('type({})', type({}))
+            # print(list(self.task_map.keys()))
+
+            # for item in list(self.task_map.keys()):
+            #     print(self.task_map[item])
+                # print(item)
+
+            # print('self.task_map=', self.task_map)
+            # print('---------------------------------')
+            return self.task_map[self.task][key]
+        except Exception as e:
+            name = self.__class__.__name__
+            mode = inspect.stack()[1][3]  # get the function name.
+            raise NotImplementedError(
+                emojis(f"WARNING ⚠️ '{name}' model does not support '{mode}' mode for '{self.task}' task yet.")
+            ) from e
+
     def clear_callback(self, event: str) -> None:
         """
         Clears all callback functions registered for a specified event.
@@ -807,42 +835,16 @@ class Model(nn.Module):
         for event in callbacks.default_callbacks.keys():
             self.callbacks[event] = [callbacks.default_callbacks[event][0]]
 
-    @staticmethod
-    def _reset_ckpt_args(args: dict) -> dict:
-        """Reset arguments when loading a PyTorch model."""
-        include = {"imgsz", "data", "task", "single_cls"}  # only remember these arguments when loading a PyTorch model
-        return {k: v for k, v in args.items() if k in include}
-
     # def __getattr__(self, attr):
     #    """Raises error if object has no requested attribute."""
     #    name = self.__class__.__name__
     #    raise AttributeError(f"'{name}' object has no attribute '{attr}'. See valid attributes below.\n{self.__doc__}")
 
-    def _smart_load(self, key: str):
-        """Load model/trainer/validator/predictor."""
-        try:
-            print('---------------------------------')
-            print('self.task=', self.task)
-            print('key=', key)
-            print('self.task_map:')
-            # print('type(self.task_map.keys())', type(self.task_map.keys()))
-            # print(self.task_map.keys())
-            # print('type({})', type({}))
-            # print(list(self.task_map.keys()))
-
-            for item in list(self.task_map.keys()):
-                print(self.task_map[item])
-                # print(item)
-
-            # print('self.task_map=', self.task_map)
-            print('---------------------------------')
-            return self.task_map[self.task][key]
-        except Exception as e:
-            name = self.__class__.__name__
-            mode = inspect.stack()[1][3]  # get the function name.
-            raise NotImplementedError(
-                emojis(f"WARNING ⚠️ '{name}' model does not support '{mode}' mode for '{self.task}' task yet.")
-            ) from e
+    @staticmethod
+    def _reset_ckpt_args(args: dict) -> dict:
+        """Reset arguments when loading a PyTorch model."""
+        include = {"imgsz", "data", "task", "single_cls"}  # only remember these arguments when loading a PyTorch model
+        return {k: v for k, v in args.items() if k in include}
 
     @property
     def task_map(self) -> dict:
