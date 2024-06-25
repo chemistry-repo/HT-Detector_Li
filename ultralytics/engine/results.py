@@ -447,7 +447,7 @@ class Results(SimpleClass):
                 if len(con_list) == len(b_avg_list):
                     slope, intercept, r, p, std_err = stats.linregress(con_list, b_avg_list)
                     with open(formula_file, 'w') as file:
-                        json.dump({'slope':slope, 'intercept':intercept, 'R2':r}, file)
+                        json.dump({'slope':slope, 'intercept':intercept, 'r':r}, file)
                     with open(blue_file, 'w') as file:
                         json.dump(b_avg_list, file)
                     # os.path.dirname(self.path)
