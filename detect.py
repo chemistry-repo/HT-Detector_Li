@@ -1,5 +1,6 @@
 from ultralytics import YOLO
 import os
+import time
 
 def detection():
     #
@@ -9,10 +10,10 @@ def detection():
     for file_name in file_names:
         abs_file_names.append(os.path.join(os.getcwd(), "custom/detectImg/5.15/", file_name))
     for abs_file_name in abs_file_names:
+        start = time.time()
         results = model.predict(source=abs_file_name, save=True)  # 对图像进行预测
-
-
-
+        end = time.time()
+        print('The whole time is :', (end-start)*1000, ' ms')
 
 
 
