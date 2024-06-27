@@ -373,7 +373,7 @@ class Results(SimpleClass):
                             # print(data_dic['slope'])
                         c_con = (b_avg - data_dic['intercept']) / data_dic['slope']
                         # c_con = (-b_avg+154.53)/1.0529
-                        c_con = round(c_con, 1)
+                        c_con = round(c_con, 3)
 
                         # annotator.rectangle(xy=(x0_con, y0_con), width=5)
                         # annotator.box_label(box=Boxes(torch.Tensor([x0_con, y0_con, x1_con, y1_con,  0.9, 0]), orig_shape=annotator.im.shape))
@@ -405,9 +405,9 @@ class Results(SimpleClass):
                 # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 7], "|" + str(r_avg), txt_color=(0, 0, 255))
                 # one line
                 annotator.text([int(x0), int(y1) + y_bias], "Con.:" + str(c_con), txt_color=(255, 255, 255))
-                annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "Blue:" + str(b_avg), txt_color=(255, 145, 48))
-                annotator.text([int(x0), int(y1) + y_bias + txt_bias * 2], "Green:" + str(g_avg), txt_color=(0, 255, 0))
-                annotator.text([int(x0), int(y1) + y_bias + txt_bias * 3], "Red:" + str(r_avg), txt_color=(0, 0, 255))
+                annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "Blue:" + str(round(b_avg, 1)), txt_color=(255, 145, 48))
+                annotator.text([int(x0), int(y1) + y_bias + txt_bias * 2], "Green:" + str(round(g_avg, 1)), txt_color=(0, 255, 0))
+                annotator.text([int(x0), int(y1) + y_bias + txt_bias * 3], "Red:" + str(round(r_avg, 1)), txt_color=(0, 0, 255))
 
                 annotator.text([int(x0), int(y1) - y_bias * 4 - txt_bias * 2], "No." + str(id), txt_color=(255, 255, 255))
                 # add c_con, b_avg, g_avg, r_avg to the overall list
