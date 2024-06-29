@@ -2,13 +2,13 @@ from ultralytics import YOLO
 import os
 import time
 
-def detection():
+def detection(img_dir):
     #
     model = YOLO("weights/cuvette_huili/yolov8n_train/weights/best.pt")  # 加载预训练模型（建议用于训练）
-    file_names = os.listdir(os.path.join(os.getcwd(), "custom/detectImg/5.15/"))
+    file_names = os.listdir(img_dir)
     abs_file_names = []
     for file_name in file_names:
-        abs_file_names.append(os.path.join(os.getcwd(), "custom/detectImg/5.15/", file_name))
+        abs_file_names.append(os.path.join(img_dir, file_name))
     for abs_file_name in abs_file_names:
         start = time.time()
         results = model.predict(source=abs_file_name, save=True)  # 对图像进行预测
