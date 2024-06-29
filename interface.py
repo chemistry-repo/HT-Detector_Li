@@ -22,6 +22,15 @@ con_display_accuracy = 2 #可以更改
 color_channel = 'B' # 'R' 'G' 'B' 三选一
 
 
+# 升级功能
+# 线性回归和浓度识别，照片分开文件夹放，linear_dir 和 detection_dir
+# linear和detection结果都放在results_dir中
+# 一定先linear再detection，linear会删除results_dir中所有excel结果
+# linear产生的结果文件：linear_con_rgb.xlsx, linear_formula_R.xlsx，linear_formula_B.xlsx，linear_formula_G.xlsx
+# detection产生的结果文件：xxx.xlsx
+# excel中保存高精度结果。平均rgb计算小数点可控，显示输出结果可控。
+
+
 
 
 
