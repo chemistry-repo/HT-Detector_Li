@@ -11,6 +11,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
+import pandas as pd
 
 from ultralytics.data.augment import LetterBox
 from ultralytics.utils import LOGGER, SimpleClass, ops
@@ -275,28 +276,42 @@ class Results(SimpleClass):
         if pred_boxes is not None and show_boxes:
             print('my detect++++++------------------------------------')
             print('show_boxes=', show_boxes)
-            from interface import x0_ratio, y0_ratio, x1_ratio, y1_ratio, con_detect, con_list, b_avg_list
+            from interface import (x0_ratio, y0_ratio, x1_ratio, y1_ratio, mode, con_list,
+                                    rgb_calculate_accuracy,rgb_display_accuracy, con_display_accuracy, color_channel, results_dir)
             from scipy import stats
             import os, json
+
             # print('pred_boxes cls=', pred_boxes.cls)
             # print('pred_boxes xyxy=', pred_boxes.xyxy)
             # print('pred_boxes xywh=', pred_boxes.xywh)
             # print('pred_boxes type=', type(pred_boxes))
-
             # print('items =', pred_boxes.cls[0].item())
 
             index = 0
             # print('pred_boxes.cls', pred_boxes.cls)
-            b_avg_list.clear()
+            # b_avg_list.clear()
 
-            formula_path = os.path.join(os.path.dirname(os.path.dirname(self.path)), 'formula')
-            if not os.path.exists(formula_path):
-                os.makedirs(formula_path)
-            # print('fromula_path:', formula_path)
-            formula_file = os.path.join(formula_path, 'formula.txt')
-            blue_file = os.path.join(formula_path, 'blue.txt')
-            # print('formula file name: ', formula_file)
+            # formula_path = os.path.join(os.path.dirname(os.path.dirname(self.path)), 'formula')
+            # if not os.path.exists(formula_path):
+            #     os.makedirs(formula_path)
+            # # print('fromula_path:', formula_path)
+            # formula_file = os.path.join(formula_path, 'formula.txt')
+            # blue_file = os.path.join(formula_path, 'blue.txt')
+            # # print('formula file name: ', formula_file)
             coor_list = []
+            # store all the sample information in each image for both linear stage and detection stage
+            linear_reg_dict = {'Name': str, 'No.': [], 'Con.': [], 'Red': [], 'Green': [], 'Blue': []}
+            linear_reg_R_formula_dict = {'slope': [], 'intercept': [], 'r': [], 'R2': [], 'p': [], 'std_err': []}
+            linear_reg_G_formula_dict = {'slope': [], 'intercept': [], 'r': [], 'R2': [], 'p': [], 'std_err': []}
+            linear_reg_B_formula_dict = {'slope': [], 'intercept': [], 'r': [], 'R2': [], 'p': [], 'std_err': []}
+            detection_dict = {'Name': str, 'No.': [], 'Con.': [], 'Red': [], 'Green': [], 'Blue': []}
+            img_name = os.path.split(self.path)[-1].split('.')[0]
+            linear_reg_dict['Name'] = img_name
+            detection_dict['Name'] = img_name
+            # print('img_name=', img_name)
+            #check mode and color channel, the default is mode='linear', color_channel='B'
+            if mode not in ['linear', 'detection']: mode = 'linear'
+            if color_channel not in ['R', 'G', 'B']: color_channel = 'B'
 
             # sort the coordinates of the expected class
             for item in pred_boxes.cls:
@@ -317,6 +332,7 @@ class Results(SimpleClass):
             have_table = False
             if have_table: x0_last = 0
             if have_table: overall_list = [('No.', 'Con.', 'Blue', 'Green', 'Red')] # the overall list of the ids, concentrations, and RGBs
+            # handle each sample in one image
             for coor in coor_list:
                 # print('coor', coor)
                 # print('seperate:', coor[0], coor[1], coor[2], coor[3], coor[4], coor[5])
@@ -352,62 +368,110 @@ class Results(SimpleClass):
                     x0_con, y0_con, x1_con, y1_con = int(x1*x0_ratio+x0*(1-x0_ratio)), int(y1*y0_ratio+y0*(1-y0_ratio)), int(x1*x1_ratio+x0*(1-x1_ratio)), int(y1*y1_ratio+y0*(1-y1_ratio))
                     w_con, h_con = (x1_con - x0_con), (y1_con - y0_con)
                     # print('xywh_con', x0_con, y0_con, x1_con, y1_con, w_con, h_con)
-
-                r_avg, g_avg, b_avg = self.calAvgRgb(annotator.im, x0_con, y0_con, w_con, h_con)
+                # calculate the average RGB values of a sample in one image
+                r_avg, g_avg, b_avg = self.calAvgRgb(annotator.im, x0_con, y0_con, w_con, h_con, rgb_calculate_accuracy)
 
                 # mark the concentration area
                 mybox = torch.tensor([x0_con, y0_con, x1_con, y1_con], device='cuda:0')
                 annotator.box_label(mybox, label="", color=(250,240,10))
 
-                if not con_detect:
-                    b_avg_list.append(b_avg)
-                    c_con = con_list[id-1]
+                if mode == 'linear':
+                    # linear_reg_dict['Name']
+                    # record the RGB and concentration in linear regression stage
+                    linear_reg_dict['No.'].append(id)
+                    linear_reg_dict['Con.'].append(con_list[id-1])
+                    linear_reg_dict['Red'].append(r_avg)
+                    linear_reg_dict['Green'].append(g_avg)
+                    linear_reg_dict['Blue'].append(b_avg)
 
-                if con_detect:
-                    if os.path.exists(formula_file):
-                        with open(formula_file, 'r') as file:
-                            data_dic = json.load(file)
-                            # print('data_dic:', data_dic)
-                            # print('type(data_dic):', type(data_dic))
-                            # print(data_dic['intercept'])
-                            # print(data_dic['slope'])
-                        c_con = (b_avg - data_dic['intercept']) / data_dic['slope']
-                        # c_con = (-b_avg+154.53)/1.0529
-                        c_con = round(c_con, 3)
+                    # b_avg_list.append(b_avg)
+                    # c_con = con_list[id-1]
 
-                        # annotator.rectangle(xy=(x0_con, y0_con), width=5)
-                        # annotator.box_label(box=Boxes(torch.Tensor([x0_con, y0_con, x1_con, y1_con,  0.9, 0]), orig_shape=annotator.im.shape))
-
-                        # from PIL import ImageDraw
-                        # self.im = im if input_is_pil else Image.fromarray(im)
-                        # print('img =', img)
-                        # self.draw = ImageDraw.Draw(img)
-                        # self.draw.text((p1[0], p1[1] - h if outside else p1[1]), label, fill=txt_color, font=self.font)
-
-                        # box1 = Boxes(boxes=None, self.orig_shape) #if boxes is not None else None
-                        # box1 = Boxes(None, self.orig_shape) #if boxes is not None else None
-                        # annotator.box_label(box=box1, label='YUe Hengmao')
-
-                        # two lines
-                        # annotator.text([int(x0), int(y1) + y_bias], "|Con:", txt_color=(255, 255, 255))
-                        # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "|" + str(c_con), txt_color=(255, 255, 255))
-                        # one line
-                        # annotator.text([int(x0), int(y1) + y_bias], "Con.:" + str(c_con), txt_color=(255, 255, 255))
+                if mode == 'detection':
+                    # record the RGB in detection stage
+                    detection_dict['No.'].append(id)
+                    detection_dict['Red'].append(r_avg)
+                    detection_dict['Green'].append(g_avg)
+                    detection_dict['Blue'].append(b_avg)
 
 
-                # # two lines
-                # annotator.text([int(x0), int(y1) + y_bias], "Con.:" + str(c_con), txt_color=(255, 255, 255))
-                # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 2], "|Blue:", txt_color=(255, 0, 0))
-                # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 3], "|" + str(b_avg), txt_color=(255, 0, 0))
-                # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 4], "|Green:", txt_color=(0, 255, 0))
-                # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 5], "|" + str(g_avg), txt_color=(0, 255, 0))
-                # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 6], "|Red:", txt_color=(0, 0, 255))
-                # annotator.text([int(x0), int(y1) + y_bias + txt_bias * 7], "|" + str(r_avg), txt_color=(0, 0, 255))
-                # one line
-                annotator.text([int(x0), int(y1) + y_bias], "Con.:" + str(c_con), txt_color=(255, 255, 255))
-                annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "Blue:" + str(round(b_avg, 1)), txt_color=(255, 145, 48))
-                annotator.text([int(x0), int(y1) + y_bias + txt_bias * 2], "Green:" + str(round(g_avg, 1)), txt_color=(0, 255, 0))
-                annotator.text([int(x0), int(y1) + y_bias + txt_bias * 3], "Red:" + str(round(r_avg, 1)), txt_color=(0, 0, 255))
+                    # read the linear regression formula
+                    # if os.path.exists(formula_file):
+                    # pass read channel formula
+                    if color_channel == 'R':
+                        # linear_reg_R_formula_dict
+                        data_dic = self.excelTodict(os.path.join(results_dir, 'linear_formula_R.xlsx'))
+                    elif color_channel == 'G':
+                        # linear_reg_G_formula_dict
+                        data_dic = self.excelTodict(os.path.join(results_dir, 'linear_formula_G.xlsx'))
+                    else: # the default is 'B'
+                        # linear_reg_B_formula_dict
+                        data_dic = self.excelTodict(os.path.join(results_dir, 'linear_formula_B.xlsx'))
+
+                    # with open(formula_file, 'r') as file:
+                    #     data_dic = json.load(file)
+                    #     # print('data_dic:', data_dic)
+                    #     # print('type(data_dic):', type(data_dic))
+                    #     # print(data_dic['intercept'])
+                    #     # print(data_dic['slope'])
+
+                    # which channel to use
+                    if color_channel == 'R':
+                        which_channel = r_avg
+                    elif color_channel == 'G':
+                        which_channel = g_avg
+                    else: # the default is 'B'
+                        which_channel = b_avg
+                    # calculate concentration according to linear equation
+                    # print('type-data_dic[intercept]=', type(data_dic['intercept']))
+                    c_con = (which_channel - data_dic['intercept'][0]) / data_dic['slope'][0] #data_dic['intercept'] is a list
+                    # # record the concentration in detection stage
+                    # print('type-c_con=', type(c_con))
+                    detection_dict['Con.'].append(c_con)
+
+                    # annotator.rectangle(xy=(x0_con, y0_con), width=5)
+                    # annotator.box_label(box=Boxes(torch.Tensor([x0_con, y0_con, x1_con, y1_con,  0.9, 0]), orig_shape=annotator.im.shape))
+
+                    # from PIL import ImageDraw
+                    # self.im = im if input_is_pil else Image.fromarray(im)
+                    # print('img =', img)
+                    # self.draw = ImageDraw.Draw(img)
+                    # self.draw.text((p1[0], p1[1] - h if outside else p1[1]), label, fill=txt_color, font=self.font)
+
+                    # box1 = Boxes(boxes=None, self.orig_shape) #if boxes is not None else None
+                    # box1 = Boxes(None, self.orig_shape) #if boxes is not None else None
+                    # annotator.box_label(box=box1, label='YUe Hengmao')
+
+                # truncate RGB and concentration for display
+                if mode == 'linear':
+                    # print('ckkkkkkkk=', round(55.5535, rgb_display_accuracy))
+                    # print('linear_reg_dict[\'Red\'][id - 1]=', linear_reg_dict['Red'][id - 1])
+                    # print('type - linear_reg_dict[\'Red\'][id - 1]=', type(linear_reg_dict['Red'][id - 1]))
+                    con_dis = round(linear_reg_dict['Con.'][id - 1], con_display_accuracy)
+                    r_dis = round(linear_reg_dict['Red'][id - 1], rgb_display_accuracy)
+                    g_dis = round(linear_reg_dict['Green'][id - 1], rgb_display_accuracy)
+                    b_dis = round(linear_reg_dict['Blue'][id - 1], rgb_display_accuracy)
+                else: # default is detection
+                    # print('ckkkkkkkk=', round(56.7535, con_display_accuracy))
+                    # print('detection_dict[\'Con.\'][id - 1]=', detection_dict['Con.'][id - 1])
+                    # print('type - detection_dict[\'Con.\'][id - 1]=', type(detection_dict['Con.'][id - 1]))
+                    # print('weweewekkkk=', round(89.7535, rgb_display_accuracy))
+                    # print('detection_dict[\'Red\'][id - 1]=', detection_dict['Red'][id - 1])
+                    # print('type - detection_dict[\'Red\'][id - 1]=', type(detection_dict['Red'][id - 1]))
+                    con_dis = round(detection_dict['Con.'][id - 1], con_display_accuracy)
+                    r_dis = round(detection_dict['Red'][id - 1], rgb_display_accuracy)
+                    g_dis = round(detection_dict['Green'][id - 1], rgb_display_accuracy)
+                    b_dis = round(detection_dict['Blue'][id - 1], rgb_display_accuracy)
+
+
+                # print('b_avg = ', b_avg)
+                # print('g_avg = ', g_avg)
+                # print('green_text = ', green_text)
+
+                annotator.text([int(x0), int(y1) + y_bias], "Con.:" + str(con_dis), txt_color=(255, 255, 255))
+                annotator.text([int(x0), int(y1) + y_bias + txt_bias * 1], "Blue:" + str(b_dis), txt_color=(255, 145, 48))
+                annotator.text([int(x0), int(y1) + y_bias + txt_bias * 2], "Green:" + str(g_dis), txt_color=(0, 255, 0))
+                annotator.text([int(x0), int(y1) + y_bias + txt_bias * 3], "Red:" + str(r_dis), txt_color=(0, 0, 255))
 
                 annotator.text([int(x0), int(y1) - y_bias * 4 - txt_bias * 2], "No." + str(id), txt_color=(255, 255, 255))
                 # add c_con, b_avg, g_avg, r_avg to the overall list
@@ -442,16 +506,47 @@ class Results(SimpleClass):
                     annotator.text([int(x0_overall + 630), int(y0_overall + h_line * overall_index)], str(overall_item[4]), txt_color=(0, 0, 255))
                     overall_index = overall_index + 1
 
-            if not con_detect:
-                # check if the number of concentration equal to blue value
-                if len(con_list) == len(b_avg_list):
-                    slope, intercept, r, p, std_err = stats.linregress(con_list, b_avg_list)
-                    with open(formula_file, 'w') as file:
-                        json.dump({'slope':slope, 'intercept':intercept, 'r':r}, file)
-                    with open(blue_file, 'w') as file:
-                        json.dump(b_avg_list, file)
-                    # os.path.dirname(self.path)
+            if mode == 'linear':
+                # check if the number of concentration equal to RGB value
+                if len(linear_reg_dict['Con.']) == len(linear_reg_dict['Red']):
+                    # files to save concentration, rgb, formula R,G,B ,seperately in the linear stage
+                    linear_reg_con_rgb_file = os.path.join(results_dir, 'linear_con_rgb.xlsx')
+                    linear_reg_R_formula_file = os.path.join(results_dir, 'linear_formula_R.xlsx')
+                    linear_reg_G_formula_file = os.path.join(results_dir, 'linear_formula_G.xlsx')
+                    linear_reg_B_formula_file = os.path.join(results_dir, 'linear_formula_B.xlsx')
+                    text = ['slope', 'intercept', 'r', 'R2', 'p', 'std_err']
+                    # save the linear regression formula of Red vs. Con. to the file ...linear_formula_R.xlsx
+                    slope, intercept, r, p, std_err = stats.linregress(linear_reg_dict['Con.'], linear_reg_dict['Red'])
+                    paras = [slope, intercept, r, r * r, p, std_err]
+                    for _, value in enumerate(zip(text, paras)): linear_reg_R_formula_dict[value[0]].append(value[1])
+                    # print('linear_reg_R_formula_dict', linear_reg_R_formula_dict)
+                    self.dictToexcel(linear_reg_R_formula_dict, linear_reg_R_formula_file)
+                    # save the linear regression formula of Green vs. Con. to the file ...linear_formula_G.xlsx
+                    slope, intercept, r, p, std_err = stats.linregress(linear_reg_dict['Con.'], linear_reg_dict['Green'])
+                    paras = [slope, intercept, r, r * r, p, std_err]
+                    for _, value in enumerate(zip(text, paras)): linear_reg_G_formula_dict[value[0]].append(value[1])
+                    # print('linear_reg_G_formula_dict', linear_reg_G_formula_dict)
+                    self.dictToexcel(linear_reg_G_formula_dict, linear_reg_G_formula_file)
+                    # save the linear regression formula of Blue vs. Con. to the file ...linear_formula_B.xlsx
+                    slope, intercept, r, p, std_err = stats.linregress(linear_reg_dict['Con.'], linear_reg_dict['Blue'])
+                    paras = [slope, intercept, r, r * r, p, std_err]
+                    for _, value in enumerate(zip(text, paras)): linear_reg_B_formula_dict[value[0]].append(value[1])
+                    # print('linear_reg_B_formula_dict', linear_reg_B_formula_dict)
+                    self.dictToexcel(linear_reg_B_formula_dict, linear_reg_B_formula_file)
+                    # save RGB values of linear image into file ...linear_con_rgb
+                    self.dictToexcel(linear_reg_dict, linear_reg_con_rgb_file)
 
+                    # # save to excel file. input: filename, p
+                    # with open(formula_file, 'w') as file:
+                    #     json.dump({'slope':slope, 'intercept':intercept, 'r':r}, file)
+                    # with open(blue_file, 'w') as file:
+                    #     json.dump(b_avg_list, file)
+                    # # os.path.dirname(self.path)
+            else: # detection mode
+                # print(os.path.split(detection_dict['Name'])[-1].split('.')[0])
+                detection_file = os.path.join(results_dir, (os.path.split(detection_dict['Name'])[-1].split('.')[0] + '.xlsx')) # use '+' instead of use joint, because joint add '\'
+                # print('detection_file', detection_file)
+                self.dictToexcel(detection_dict, detection_file)
 
             for d in reversed(pred_boxes):
                 c, conf, id = int(d.cls), float(d.conf) if conf else None, None if d.id is None else int(d.id.item())
@@ -487,8 +582,26 @@ class Results(SimpleClass):
 
 
 # ============================
+    def dictToexcel(self, input_dict, file_path):
+        """save dictionary to an excel"""
+        df = pd.DataFrame.from_dict(input_dict)
+        df.to_excel(file_path, index=False)
 
-    def calAvgRgb(self, img, x, y, w, h):
+    def excelTodict(self, file_path):
+        """read data from dictionary to save as a dictionary"""
+        df = pd.read_excel(file_path)
+        dict_df = df.to_dict()
+        # print(type(dict_df))
+        # print(dict_df)
+        dict_result = {}
+        for key in dict_df.keys():
+            dict_result[key] = list(dict_df[key].values())
+            # print(list(dict_df[key].values()))
+        # print(dict_result)
+        return dict_result  # {key:list[]}
+
+    def calAvgRgb(self, img, x, y, w, h, accuracy=16):
+        """calculate the average RGB values of a selected area to a certain accuracy"""
         if 0 == w or 0 == h:
             return False
         r_sum = 0
@@ -505,7 +618,7 @@ class Results(SimpleClass):
         #        print('b_sum =', b_sum)
         #        print('c_sum =', c_sum)
 
-        self.accuracy = 0
+        self.accuracy = accuracy
         # print('w*h=', w*h)
         #        print('self.accuracy', self.accuracy)
         if self.accuracy == 0:
